@@ -1,3 +1,11 @@
+'''
+Hamed Mirlohi
+ECE 510 Post-Silicon Validation
+Homework #1
+
+github: 
+'''
+
 import matplotlib.pyplot as plt
 from operator import itemgetter
 
@@ -8,28 +16,14 @@ Y_VALUE = 1
 FREQUENCY = 1
 X_LOCATION = 2
 Y_LOCATION = 3
+DIE_X_Y = 3
 
-# open CPU dump in Read Only mode
-pFile = open("silicon_data.txt", "r")
-
-parsedList = []
-
-while True:
-    # read a single line
-    line = pFile.readline()
-    # end of the file? exit loop
-    if not line:
-        break
-
-    # if blank line detected or word "id" detected, SKIP
-    if (not line.strip() or "id" in line):
-        continue
-
+def process_Line(line):
     # split all values by whitespace
     match = line.split()
 
     # split die locations by comma
-    locations = match[3].split(",")
+    locations = match[DIE_X_Y].split(",")
     # die locations saved, pop the last element which includes the location
     match.pop()
     # pop the first element as well, numbers not needed
@@ -38,28 +32,45 @@ while True:
     match.append(locations[X_VALUE])
     # insert yLocation to list
     match.append(locations[Y_VALUE])
+    
+    return match
 
-    parsedList.append(match)
 
-pFile.close()
+# open CPU dump in Read Only mode
+with open("silicon_data.txt", "r") as pFile:
+
+    parsedList = []
+
+    while True:
+        # read a single line
+        line = pFile.readline()
+        # end of the file? exit loop
+        if not line:
+            break
+
+    # if blank line detected or word "id" detected, SKIP
+        if (not line.strip() or "id" in line):
+            continue
+
+        parsedList.append(process_Line(line))
 
 # sort list elements in respect to y-values
 sortedParsedList = sorted(parsedList, key=itemgetter(Y_LOCATION))
 
 # all contents are read, now lets write everything to new file
-pFile = open("sorted_data.txt", 'w')
+#pFile = open("sorted_data.txt", 'w')
 
-# write the titles
-pFile.write("#id\tvoltage(V)\tfrequency(Mhz)\tDieLocation(x,y)\n\n")
+with open("sorted_data.txt", 'w') as sFile:
 
-# write all sorted values to file, plot all the values
-for counter, x in enumerate(sortedParsedList):
-    pFile.write(str(counter + 1) + "\t\t" + str(x[VOLTAGE]) + "\t\t" + str(x[FREQUENCY]) + "\t\t" + str(
+    # write the titles
+    sFile.write("#id\tvoltage(V)\tfrequency(Mhz)\tDieLocation(x,y)\n\n")
+
+    # write all sorted values to file, plot all the values
+    for counter, x in enumerate(sortedParsedList):
+        sFile.write(str(counter + 1) + "\t\t" + str(x[VOLTAGE]) + "\t\t" + str(x[FREQUENCY]) + "\t\t" + str(
         x[X_LOCATION]) + "," + str(x[Y_LOCATION]) + "\n")
-    plt.scatter(x[VOLTAGE], x[FREQUENCY])
-
-# done, close the file
-pFile.close()
+        # plot voltage and frequency
+        plt.scatter(x[VOLTAGE], x[FREQUENCY])
 
 # display the plots
 plt.show()
